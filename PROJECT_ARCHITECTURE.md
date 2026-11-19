@@ -1,123 +1,233 @@
+# DataFix — Project Architecture
 
-# PROJECT ARCHITECTURE
+## Overview
 
-## 1. Project Overview
+**DataFix** is a full-stack Autonomous Data Quality & Repair Engine. It accepts CSV/XLSX files, detects data quality issues, applies AI-assisted repairs, and returns downloadable clean datasets with detailed reports.
 
-**Project Name:** [Data_Fix]
+---
 
-**Description:** [Data fix autonomous data quality and repair engine is our project for today's hackathon so we must build a user friendly, impressive creative app which accepts info from user for exam if is college database so student name registration number age phone number and if any other organisations so their info ,soo how much the app be , car speedometer boosters inspired animation and whole.... Opening animation to upcoming windows interfaces for user after e selects desires options in app such as enter data , displaying data purity quality ect , download option with option of only his class or department or whole clg for example.... So yeaaa firstly analysing this create many pictures showing one after another of how user wud experience pictorially and keep the colours combination of black blue yellow red since even speedometer inspired it is]
+## Stack
 
-## 2. Technology Stack
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + Vite + Tailwind CSS |
+| Backend | Node.js 20 + Express 5 |
+| Database | MongoDB (Mongoose ODM) |
+| AI | Google Gemini 1.5 Flash |
+| File parsing | csv-parser, xlsx |
+| File export | xlsx, csv-stringify |
 
-### Frontend
-- Framework: React
-- Language: JavaScript
-- Styling: Tailwind CSS
-- State Management: Context API
+---
 
-### Backend
-- Runtime: Node.js
-- Framework: Express.js
-- Language: JavaScript
+## Directory Structure
 
-### Database
-- Database: MongoDB
-- ORM/ODM: Mongoose
-
-### Tools
-- Version Control: Git & GitHub
-- Code Editor: VS Code
-
-## 3. Project Folder Structure
-
+```
 Data_Fix/
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── hooks/
-│   │   └── assets/
-│   └── package.json
-│
 ├── backend/
-│   ├── src/
-│   │   ├── routes/
-│   │   ├── controllers/
-│   │   ├── services/
-│   │   │   └── ai/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   └── config/
-│   └── package.json
-│
-├── database/
-│   ├── schema/
-│   └── migrations/
-│
-├── AI_INSTRUCTIONS.md
-├── PROJECT_ARCHITECTURE.md
-├── API_CONTRACTS.md
-├── .env.example
-├── .gitignore
-└── README.md
-Update this structure to match the actual repository. Do not create folders just because they appear in this example.
+│   ├── server.js              Entry point — bootstraps DB + HTTP server
+│   ├── app.js                 Express app factory (middleware, routes)
+│   ├── package.json
+│   ├── .env                   PORT, MONGODB_URI, AI_API_KEY, FRONTEND_URL
+│   └── src/
+│       ├── config/
+│       │   ├── database.js    Mongoose connection with retry logic
+│       │   └── aiConfig.js    Gemini SDK initialisation
+│       ├── models/
+│       │   └── Session.js     Mongoose schema for a processing session
+│       ├── routes/
+│       │   ├── index.js       Mounts all sub-routers + health check
+│       │   ├── uploadRoutes.js
+│       │   ├── analysisRoutes.js
+│       │   ├── repairRoutes.js
+│       │   ├── downloadRoutes.js
+│       │   └── reportRoutes.js
+│       ├── controllers/
+│       │   ├── uploadController.js
+│       │   ├── analysisController.js
+│       │   ├── repairController.js
+│       │   ├── downloadController.js
+│       │   └── reportController.js
+│       ├── middleware/
+│       │   ├── errorHandler.js    Global Express error handler
+│       │   └── uploadMiddleware.js  Multer config (10 MB, CSV/XLSX only)
+│       └── services/
+│           ├── fileParserService.js   CSV/XLSX → JS array
+│           ├── dataQualityService.js  Issue detection + quality scoring
+│           ├── repairService.js       Rule-based repair strategies
+│           └── ai/
+│               └── geminiService.js  Gemini prompt builder + response parser
+├── frontend/
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── .env                   VITE_API_BASE_URL=http://localhost:5000/api
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── index.css
+│       ├── context/
+│       │   └── SessionContext.jsx
+│       ├── hooks/
+│       │   ├── useSession.js
+│       │   └── useUpload.js
+│       ├── services/
+│       │   └── api.js          Axios instance + typed API helpers
+│       ├── pages/
+│       │   ├── LandingPage.jsx
+│       │   ├── AnalysisPage.jsx
+│       │   ├── RepairPage.jsx
+│       │   ├── DiffPage.jsx
+│       │   ├── ReportPage.jsx
+│       │   └── DownloadPage.jsx
+│       └── components/
+│           ├── layout/
+│           │   └── Navbar.jsx
+│           ├── ui/
+│           │   ├── QualityGauge.jsx
+│           │   ├── IssueCard.jsx
+│           │   ├── RepairCard.jsx
+│           │   ├── DataTable.jsx
+│           │   ├── DiffViewer.jsx
+│           │   ├── LoadingSpinner.jsx
+│           │   ├── AnimatedCounter.jsx
+│           │   └── ColumnHealthBar.jsx
+│           ├── upload/
+│           │   └── DropZone.jsx
+│           └── charts/
+│               ├── IssueTypeChart.jsx
+│               └── SeverityPieChart.jsx
+└── API_CONTRACTS.md
+```
 
-## 4. Architecture Explanation
+---
 
-### Frontend
-Describe the frontend structure and responsibilities.
+## Data Flow
 
-### Backend
-Describe the backend structure and responsibilities.
+```
+User uploads file (CSV/XLSX)
+        │
+        ▼
+POST /api/upload
+  uploadMiddleware (Multer, 10 MB limit)
+  uploadController
+    → fileParserService    (parse rows)
+    → dataQualityService   (score + detect issues)
+    → Session.create()     (persist in MongoDB)
+        │
+        ▼
+GET /api/analysis/:sessionId
+  analysisController → Session.findById()
 
-### Database
-Describe database tables, relationships and responsibilities.
+POST /api/analysis/:sessionId/ai-insights
+  analysisController → geminiService → Gemini 1.5 Flash → Session.update()
 
-## 5. Application Workflow
+POST /api/repair/:sessionId
+  repairController
+    → repairService        (apply strategies)
+    → geminiService        (AI explanation)
+    → Session.update()
 
-Explain how data moves through the application:
+GET /api/repair/:sessionId/diff
+  repairController → Session (original vs repaired)
 
-User → Frontend → API → Backend → Database → Backend → Frontend → User
+GET /api/download/:sessionId?format=csv|xlsx
+  downloadController → xlsx / csv-stringify → file stream
 
-## 6. Environment Configuration
+GET /api/report/:sessionId
+  reportController → aggregate session data → report object
+```
 
-List required environment variables and their purpose.
+---
 
-Never include actual passwords, API keys or secrets.
+## Session Model (MongoDB)
 
-## 7. Development Commands
+```
+Session {
+  _id:            ObjectId
+  originalData:   Array<Object>   // raw parsed rows
+  repairedData:   Array<Object>   // post-repair rows
+  columns:        [String]
+  rowCount:       Number
+  columnCount:    Number
+  fileType:       "csv" | "xlsx"
+  qualityScore:   Number (0–100)
+  issues:         [IssueObject]
+  repairs:        [RepairLogEntry]
+  aiInsights:     String
+  status:         "uploaded" | "analysed" | "repaired"
+  createdAt:      Date
+  updatedAt:      Date
+}
+```
 
-Document the verified commands required to install, run, test and build the application.
+---
 
-## 8. Important Development Rules
+## Middleware Stack (app.js)
 
-- Follow AI_INSTRUCTIONS.md.
-- Follow the agreed API contracts.
-- Keep the architecture consistent.
-- Update this document whenever the architecture changes.
+| Order | Middleware | Purpose |
+|-------|-----------|---------|
+| 1 | `helmet` | Security headers |
+| 2 | `cors` | Allow localhost:3000 + 5173 + FRONTEND_URL |
+| 3 | `express.json` | JSON body parsing (5 MB) |
+| 4 | `express-rate-limit` (global) | 200 req / 15 min |
+| 5 | `express-rate-limit` (upload) | 20 req / 10 min |
+| 6 | API Router | All `/api/*` routes |
+| 7 | `errorHandler` | Catches & formats all thrown errors |
 
-## 9. AI Architecture
+---
 
-AI Provider: [Provider Name]
-AI Model: [Model Name]
+## Environment Variables
 
-AI Integration Location:
-backend/services/ai/
+### Backend (`.env`)
 
-Responsibilities:
-- Process AI requests.
-- Manage communication with the AI provider.
-- Handle AI responses.
-- Handle provider errors.
-- Keep API credentials secure.
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `PORT` | `5000` | HTTP server port |
+| `MONGODB_URI` | `mongodb://localhost:27017/datafix` | MongoDB connection string |
+| `AI_API_KEY` | `AIza...` | Google Gemini API key |
+| `AI_MODEL` | `gemini-1.5-flash` | Gemini model identifier |
+| `AI_PROVIDER` | `google` | AI provider tag |
+| `FRONTEND_URL` | `http://localhost:5173` | CORS allowed origin |
 
-Environment Variables:
-- AI_PROVIDER
-- AI_MODEL
-- AI_API_KEY
+### Frontend (`.env`)
 
-Security:
-AI API credentials must never be exposed
-to the frontend.
+| Variable | Example | Description |
+|----------|---------|-------------|
+| `VITE_API_BASE_URL` | `http://localhost:5000/api` | Backend base URL |
+
+---
+
+## API Endpoints Summary
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/health` | Health check |
+| POST | `/api/upload` | Upload & analyse file |
+| GET | `/api/analysis/:sessionId` | Retrieve analysis |
+| POST | `/api/analysis/:sessionId/ai-insights` | Generate AI insights |
+| POST | `/api/repair/:sessionId` | Apply repairs |
+| GET | `/api/repair/:sessionId/diff` | Get change diff |
+| GET | `/api/download/:sessionId` | Download repaired file |
+| GET | `/api/report/:sessionId` | Full quality report |
+
+> See `API_CONTRACTS.md` for complete request/response schemas.
+
+---
+
+## Running Locally
+
+```bash
+# Backend
+cd backend
+cp .env.example .env   # fill in AI_API_KEY
+npm install
+npm run dev            # nodemon, port 5000
+
+# Frontend
+cd frontend
+cp .env.example .env
+npm install
+npm run dev            # Vite, port 5173
+```
+
+**Prerequisites:** Node.js ≥ 18, MongoDB running locally on port 27017.
