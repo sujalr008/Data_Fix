@@ -1,0 +1,24 @@
+{
+  "name": "DataFix - Autonomous Data Quality & Repair Engine",
+  "short_name": "DataFix",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#060913",
+  "theme_color": "#00f3ff",
+  "description": "Autonomous Data Quality and Self-Healing Repair Engine with Realtime Telemetry",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='36' fill='%23060913'/><path d='M40 96 L80 136 L150 56' stroke='%2300f3ff' stroke-width='18' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='96' fill='%23060913'/><path d='M100 256 L210 366 L410 146' stroke='%2300f3ff' stroke-width='48' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

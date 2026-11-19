@@ -10,29 +10,25 @@
 
 ---
 
-## Health Check
-
+## 1. Health Check
 ### `GET /api/health`
-
-Returns server status.
+Returns system readiness and status telemetry.
 
 **Response `200`**
 ```json
 {
   "success": true,
   "message": "DataFix API is running.",
-  "timestamp": "2024-01-01T00:00:00.000Z",
+  "timestamp": "2026-11-20T00:00:00.000Z",
   "version": "1.0.0"
 }
 ```
 
 ---
 
-## Upload
-
+## 2. Ingestion & Upload
 ### `POST /api/upload`
-
-Upload a CSV or XLSX file for analysis. Initiates a new session.
+Upload a CSV or XLSX file for automated inspection and anomaly detection. Initiates a session.
 
 **Request**
 - Content-Type: `multipart/form-data`
@@ -44,9 +40,9 @@ Upload a CSV or XLSX file for analysis. Initiates a new session.
   "success": true,
   "message": "File uploaded and analysed successfully.",
   "data": {
-    "sessionId": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "sessionId": "6aff4094152ec058a105f3d9",
     "qualityScore": 78,
-    "issueCount": 14,
+    "issueCount": 4,
     "issues": [
       {
         "type": "missing_values",
@@ -65,25 +61,14 @@ Upload a CSV or XLSX file for analysis. Initiates a new session.
 }
 ```
 
-**Errors**
-| Code | Reason |
-|------|--------|
-| 400  | No file provided, unsupported file type |
-| 413  | File exceeds 10 MB limit |
-| 500  | Parse or storage error |
-
 ---
 
-## Analysis
-
+## 3. Analysis
 ### `GET /api/analysis/:sessionId`
-
-Retrieve the full analysis for an existing session.
+Retrieve the full data quality analysis for an existing session.
 
 **Path Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `sessionId` | string | MongoDB ObjectId returned by `/upload` |
+- `sessionId`: string (MongoDB ObjectId or Session ID)
 
 **Response `200`**
 ```json
@@ -91,9 +76,11 @@ Retrieve the full analysis for an existing session.
   "success": true,
   "message": "Analysis retrieved successfully.",
   "data": {
-    "sessionId": "64f1a2b3c4d5e6f7a8b9c0d1",
+    "sessionId": "6aff4094152ec058a105f3d9",
     "qualityScore": 78,
-    "issues": [ { "type": "missing_values", "field": "email", "severity": "critical", "affectedCount": 5 } ],
+    "issues": [
+      { "type": "missing_values", "field": "email", "severity": "critical", "affectedCount": 5 }
+    ],
     "columns": ["id", "name", "email", "age"],
     "aiInsights": null,
     "repairs": [],
@@ -104,24 +91,11 @@ Retrieve the full analysis for an existing session.
 }
 ```
 
-**Errors**
-| Code | Reason |
-|------|--------|
-| 404  | Session not found |
-| 500  | Database error |
-
 ---
 
+## 4. Root Cause Diagnosis & AI Insights
 ### `POST /api/analysis/:sessionId/ai-insights`
-
-Trigger Gemini AI analysis and persist insights on the session.
-
-**Path Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `sessionId` | string | MongoDB ObjectId |
-
-**Request Body** _(none required)_
+Trigger AI analysis (Groq / Gemini) to diagnose root causes, assess operational risks, and recommend prioritized remediation steps.
 
 **Response `200`**
 ```json
@@ -129,32 +103,26 @@ Trigger Gemini AI analysis and persist insights on the session.
   "success": true,
   "message": "AI insights generated.",
   "data": {
-    "aiInsights": "The dataset contains several quality issues that may affect downstream analysis...",
-    "rootCauses": ["Inconsistent data entry", "Missing ETL validation"],
-    "riskAssessment": "High — 7 % of rows contain critical nulls in key join fields.",
-    "priorityOrder": ["Fix missing email values", "Remove 3 duplicate rows", "Standardise date formats"]
+    "aiInsights": "The dataset contains several quality issues that may affect downstream analytics...",
+    "rootCauses": [
+      "Inconsistent client-side validation on email inputs",
+      "Repeated ETL import batches causing duplicate records"
+    ],
+    "riskAssessment": "Critical — 7% of rows contain critical nulls in key identifiers.",
+    "priorityOrder": [
+      "Deduplicate exact-match records",
+      "Impute missing values in key fields",
+      "Standardise date formats to ISO 8601"
+    ]
   }
 }
 ```
 
-**Errors**
-| Code | Reason |
-|------|--------|
-| 404  | Session not found |
-| 502  | Gemini API error |
-
 ---
 
-## Repair
-
+## 5. Autonomous Repair Engine
 ### `POST /api/repair/:sessionId`
-
-Apply one or more automated repair strategies to the session dataset.
-
-**Path Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `sessionId` | string | MongoDB ObjectId |
+Apply automated, safe repair strategies to the dataset.
 
 **Request Body**
 ```json
@@ -168,13 +136,6 @@ Apply one or more automated repair strategies to the session dataset.
 }
 ```
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `fixMissing` | boolean | `true` | Impute or drop rows with null/empty values |
-| `removeDuplicates` | boolean | `true` | Deduplicate exact-match rows |
-| `fixFormats` | boolean | `true` | Standardise date, phone, email formats |
-| `fixOutliers` | boolean | `false` | Clip or remove statistical outliers |
-
 **Response `200`**
 ```json
 {
@@ -184,33 +145,21 @@ Apply one or more automated repair strategies to the session dataset.
     "repairedRowCount": 195,
     "repairCount": 12,
     "newQualityScore": 94,
-    "remainingIssues": 2,
+    "remainingIssues": 0,
     "repairLog": [
       { "action": "imputed", "field": "email", "rowIndex": 3, "value": "N/A" },
       { "action": "removed_duplicate", "rowIndex": 7 }
     ],
-    "aiExplanation": "12 repairs applied. Missing emails were imputed with 'N/A'. 3 duplicate rows removed."
+    "aiExplanation": "12 repairs applied successfully. Missing values imputed; duplicate rows removed."
   }
 }
 ```
 
-**Errors**
-| Code | Reason |
-|------|--------|
-| 400  | Invalid repairOptions |
-| 404  | Session not found |
-| 500  | Repair processing error |
-
 ---
 
+## 6. Audit Trail & Diff
 ### `GET /api/repair/:sessionId/diff`
-
-Retrieve a row-level diff between the original and repaired datasets.
-
-**Path Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `sessionId` | string | MongoDB ObjectId |
+Retrieve a cell-by-cell delta comparing original vs repaired datasets.
 
 **Response `200`**
 ```json
@@ -218,62 +167,32 @@ Retrieve a row-level diff between the original and repaired datasets.
   "success": true,
   "message": "Diff retrieved successfully.",
   "data": {
-    "original": [ { "id": 1, "email": null, "age": 250 } ],
-    "repaired": [ { "id": 1, "email": "N/A", "age": 45 } ],
+    "original": [ { "id": 1, "name": " John ", "email": null } ],
+    "repaired": [ { "id": 1, "name": "John", "email": "N/A" } ],
     "changes": [
-      { "rowIndex": 0, "field": "email", "original": null, "fixed": "N/A" },
-      { "rowIndex": 0, "field": "age",   "original": 250,  "fixed": 45 }
+      { "rowIndex": 0, "field": "name", "original": " John ", "fixed": "John" },
+      { "rowIndex": 0, "field": "email", "original": null, "fixed": "N/A" }
     ],
     "totalChanges": 2
   }
 }
 ```
 
-**Errors**
-| Code | Reason |
-|------|--------|
-| 404  | Session not found or no repairs run yet |
-
 ---
 
-## Download
+## 7. Clean Dataset Export & Download
+### `GET /api/download/:sessionId?format=csv` *(or `format=xlsx`)*
+Download the clean, repaired dataset as a CSV or XLSX file.
 
-### `GET /api/download/:sessionId`
-
-Download the repaired (or original) dataset as a file.
-
-**Path Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `sessionId` | string | MongoDB ObjectId |
-
-**Query Parameters**
-| Param | Values | Default | Description |
-|-------|--------|---------|-------------|
-| `format` | `csv` \| `xlsx` | `csv` | Output format |
-
-**Response `200`** — Binary file download
+**Response `200`**
 - Content-Type: `text/csv` or `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
 - Content-Disposition: `attachment; filename="datafix_repaired_<sessionId>.csv"`
 
-**Errors**
-| Code | Reason |
-|------|--------|
-| 400  | Unsupported format |
-| 404  | Session not found |
-
 ---
 
-## Report
-
+## 8. Quality Certification & Report
 ### `GET /api/report/:sessionId`
-
-Generate and return a comprehensive data quality report.
-
-**Path Parameters**
-| Param | Type | Description |
-|-------|------|-------------|
-| `sessionId` | string | MongoDB ObjectId |
+Generate and return a comprehensive data quality scorecard and timeline.
 
 **Response `200`**
 ```json
@@ -305,37 +224,10 @@ Generate and return a comprehensive data quality report.
     },
     "aiInsights": "The dataset shows strong improvement after repair...",
     "timeline": {
-      "uploadedAt": "2024-01-01T10:00:00.000Z",
-      "analysedAt": "2024-01-01T10:00:02.000Z",
-      "repairedAt": "2024-01-01T10:05:00.000Z"
+      "uploadedAt": "2026-11-20T00:00:00.000Z",
+      "analysedAt": "2026-11-20T00:00:02.000Z",
+      "repairedAt": "2026-11-20T00:05:00.000Z"
     }
   }
 }
-```
-
-**Errors**
-| Code | Reason |
-|------|--------|
-| 404  | Session not found |
-
----
-
-## Rate Limits
-
-| Scope | Window | Limit |
-|-------|--------|-------|
-| All `/api/*` routes | 15 minutes | 200 requests |
-| `/api/upload` | 10 minutes | 20 uploads |
-
----
-
-## Session Lifecycle
-
-```
-POST /upload  →  GET /analysis/:id  →  POST /analysis/:id/ai-insights
-                                     →  POST /repair/:id
-                                            ↓
-                               GET /repair/:id/diff
-                               GET /download/:id
-                               GET /report/:id
 ```

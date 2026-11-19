@@ -13,6 +13,7 @@ from app.routes.analysis import router as analysis_router
 from app.routes.repair import router as repair_router
 from app.routes.download import router as download_router
 from app.routes.report import router as report_router
+from app.routes.ui import router as ui_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -74,6 +75,9 @@ async def global_exception_handler(request: Request, exc: Exception):
             'errors': [{'message': str(exc)}]
         }
     )
+
+# Root UI route (Unified interactive dashboard)
+app.include_router(ui_router, tags=['UI'])
 
 # Mount all API routers with prefix /api
 app.include_router(health_router, prefix='/api', tags=['Health'])

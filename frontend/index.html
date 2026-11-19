@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataFix // Autonomous Data Quality & Repair Engine</title>
+  
+  <!-- Web Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/speedometer.css">
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- PWA Manifest & App Metas -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#060913">
+  <meta name="description" content="Autonomous Data Quality and Self-Healing Repair Engine with 3D WebGL Pipeline and Realtime Telemetry">
+</head>
+<body>
+
+  <!-- 3D WebGL Three.js Canvas Container -->
+  <div id="webgl-canvas-container"></div>
+  <div class="cyber-grid-overlay"></div>
+
+  <!-- Main App Wrapper -->
+  <div class="app-wrapper">
+
+    <!-- ==================== SIGN-IN FIRST PAGE (#auth-view) ==================== -->
+    <section id="auth-view" class="auth-page-container">
+      <div class="auth-glass-box">
+        <div style="text-align: center; margin-bottom: 8px;">
+          <div class="brand-icon-wrapper" style="margin: 0 auto 12px; width: 54px; height: 54px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div class="brand-title" style="font-size: 1.8rem;">DATAFIX</div>
+          <span class="brand-tag">SECURITY AUTHENTICATION GATEWAY</span>
+          <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 10px;">
+            Sign in to calibrate your identity role and access your dedicated portal.
+          </p>
+        </div>
+
+        <!-- Role Select Tabs -->
+        <div class="auth-tabs">
+          <button id="tab-btn-student" class="auth-tab-btn active" type="button">
+            <span>👤</span>
+            <span>Student / User</span>
+          </button>
+          <button id="tab-btn-admin" class="auth-tab-btn" type="button">
+            <span>🛡️</span>
+            <span>Organisation Admin</span>
+          </button>
+        </div>
+
+        <!-- 1. STUDENT SIGN-IN FORM -->
+        <form id="student-auth-form">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">Student Full Name *</label>
+              <input type="text" id="auth-student-name" class="form-input" placeholder="e.g. Aarav Sharma" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Age *</label>
+              <input type="number" id="auth-student-age" class="form-input" placeholder="17–24" min="16" max="24" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Phone Number *</label>
+              <input type="tel" id="auth-student-phone" class="form-input" placeholder="10-digit mobile number" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Department Name *</label>
+              <select id="auth-student-dept" class="form-select" required>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Electronics & Communication">Electronics & Communication</option>
+                <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="Civil Engineering">Civil Engineering</option>
+                <option value="Information Technology">Information Technology</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Semester *</label>
+              <select id="auth-student-sem" class="form-select" required>
+                <option value="1">Semester 1</option>
+                <option value="2">Semester 2</option>
+                <option value="3">Semester 3</option>
+                <option value="4" selected>Semester 4</option>
+                <option value="5">Semester 5</option>
+                <option value="6">Semester 6</option>
+                <option value="7">Semester 7</option>
+                <option value="8">Semester 8</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Year of Study *</label>
+              <select id="auth-student-year" class="form-select" required>
+                <option value="1">Year 1</option>
+                <option value="2" selected>Year 2</option>
+                <option value="3">Year 3</option>
+                <option value="4">Year 4</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Section *</label>
+              <select id="auth-student-section" class="form-select" required>
+                <option value="A">Section A</option>
+                <option value="B">Section B</option>
+                <option value="C">Section C</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-cyber-primary" style="width: 100%; margin-top: 24px; padding: 14px; font-size: 1rem;">
+            🚀 Sign In & Enter Student Portal
+          </button>
+        </form>
+
+        <!-- 2. ADMIN SIGN-IN FORM (Only Admin Name, Department Name, and Year as requested) -->
+        <form id="admin-auth-form" style="display: none;">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="form-label">Admin Full Name *</label>
+              <input type="text" id="auth-admin-name" class="form-input" placeholder="e.g. Dr. Rajesh Kumar" required>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Department Name *</label>
+              <select id="auth-admin-dept" class="form-select" required>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Electronics & Communication">Electronics & Communication</option>
+                <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                <option value="All Departments // Institution Wide">All Departments // Institution Wide</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Academic Year / Batch Year *</label>
+              <input type="number" id="auth-admin-year" class="form-input" placeholder="e.g. 2026" min="2020" max="2035" value="2026" required>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-cyber-primary" style="width: 100%; margin-top: 24px; padding: 14px; font-size: 1rem; background: linear-gradient(135deg, #9d4edd 0%, #00f3ff 100%);">
+            🛡️ Sign In as Organisation Admin
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ==================== MAIN DASHBOARD (#main-dashboard) ==================== -->
+    <div id="main-dashboard" style="display: none;">
+
+      <!-- Top Navigation -->
+      <header class="top-nav">
+        <div class="brand-section">
+          <div class="brand-icon-wrapper">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+          <div>
+            <div class="brand-title">DATAFIX</div>
+            <span class="brand-tag">v1.0.0 AUTONOMOUS CORE</span>
+          </div>
+        </div>
+
+        <div class="nav-actions">
+          <!-- Live Backend Status -->
+          <div id="backend-status-pill" class="status-pill local" title="Checking API status...">
+            ● PROBING API...
+          </div>
+
+          <!-- Signed In Role Badge -->
+          <div id="nav-user-badge" class="auth-badge-btn" style="cursor: default;">
+            <span id="nav-user-icon">👤</span>
+            <span id="nav-user-label">Student</span>
+          </div>
+
+          <!-- Sound Toggle -->
+          <button id="sound-toggle-btn" class="sound-toggle-btn" title="Toggle Turbo SFX">
+            🔊
+          </button>
+
+          <!-- SIGN OUT / SWITCH USER BUTTON -->
+          <button id="nav-signout-btn" class="signout-btn" title="Sign out and switch user role">
+            <span>🚪</span>
+            <span>Sign Out</span>
+          </button>
+
+          <!-- TOP RIGHT WEB APPLICATION LAUNCH / DOWNLOAD BUTTON -->
+          <button id="launch-webapp-btn" class="app-download-btn" title="Download as Native PWA App or Launch Standalone Window">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>⚡ Download / Launch App</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Active Role Context Banner -->
+      <div id="dashboard-role-banner" class="role-banner student">
+        <div id="banner-text-left">
+          <span>Active Role: <strong>Student Portal</strong></span>
+        </div>
+        <div id="banner-text-right" style="color: #94a3b8;">
+          <span>Individual Record Entry & Category Quality Telemetry</span>
+        </div>
+      </div>
+
+      <!-- Hero Section with Speedometer Telemetry HUD (0 to 100 Scale) -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-subtitle-tag">
+            <span class="pulse-dot"></span>
+            AUTONOMOUS DATA QUALITY ENGINE
+          </div>
+          <h1 class="hero-title">Self-Healing Data with <span>AI Precision</span></h1>
+          <p class="hero-description" id="hero-role-desc">
+            Detect anomalies, diagnose root causes, and apply non-destructive auto-repairs with continuous telemetry on a calibrated 0–100 quality scale.
+          </p>
+
+          <!-- Quick Telemetry Row -->
+          <div class="quick-metrics-row">
+            <div class="metric-box">
+              <span class="metric-box-label">Quality Score</span>
+              <span id="hero-quality-score" class="metric-box-val cyan">--</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Total Records</span>
+              <span id="hero-total-records" class="metric-box-val green">0</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Anomalies</span>
+              <span id="hero-anomaly-count" class="metric-box-val pink">0</span>
+            </div>
+            <div class="metric-box">
+              <span class="metric-box-label">Self-Healed</span>
+              <span id="hero-healed-count" class="metric-box-val amber">0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- High-Performance Speedometer Telemetry HUD (0 - 100 Scale) -->
+        <div class="speedometer-card">
+          <div class="speedometer-header">
+            <div class="speedometer-title">
+              <span class="pulse-dot"></span>
+              Purity Telemetry (0–100)
+            </div>
+            <div id="speedometer-score-display" style="font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #00f3ff;">
+              --
+            </div>
+          </div>
+
+          <div class="gauge-wrapper">
+            <svg class="speedometer-svg" viewBox="0 0 280 220">
+              <defs>
+                <linearGradient id="speedometer-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#ff0054"/>
+                  <stop offset="35%" stop-color="#ffb703"/>
+                  <stop offset="70%" stop-color="#00f3ff"/>
+                  <stop offset="100%" stop-color="#00f5a0"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Outer dial track -->
+              <path class="gauge-track" d="M 40 180 A 110 110 0 1 1 240 180"/>
+              <!-- Gauge colored progress -->
+              <path class="gauge-progress" d="M 40 180 A 110 110 0 1 1 240 180"/>
+
+              <!-- Ticks around gauge with 0, 20, 40, 60, 80, 100 labels -->
+              <line class="gauge-ticks-highlight" x1="45" y1="175" x2="58" y2="167"/>
+              <text x="32" y="192" fill="#64748b" font-size="10" font-family="JetBrains Mono">0</text>
+
+              <line class="gauge-ticks" x1="50" y1="120" x2="65" y2="120"/>
+              <text x="30" y="124" fill="#64748b" font-size="10" font-family="JetBrains Mono">20</text>
+
+              <line class="gauge-ticks" x1="85" y1="65" x2="96" y2="76"/>
+              <text x="70" y="58" fill="#64748b" font-size="10" font-family="JetBrains Mono">40</text>
+
+              <line class="gauge-ticks-highlight" x1="140" y1="40" x2="140" y2="55"/>
+              <text x="133" y="32" fill="#00f3ff" font-size="11" font-weight="bold" font-family="JetBrains Mono">60</text>
+
+              <line class="gauge-ticks" x1="195" y1="65" x2="184" y2="76"/>
+              <text x="200" y="58" fill="#64748b" font-size="10" font-family="JetBrains Mono">80</text>
+
+              <line class="gauge-ticks-highlight" x1="235" y1="175" x2="222" y2="167"/>
+              <text x="235" y="192" fill="#00f5a0" font-size="11" font-weight="bold" font-family="JetBrains Mono">100</text>
+
+              <!-- Needle Group (Scale 0 - 100) -->
+              <g id="speedometer-needle" class="gauge-needle-group" style="transform: rotate(-120deg);">
+                <line class="gauge-needle" x1="140" y1="140" x2="140" y2="45"/>
+                <circle class="gauge-needle-hub" cx="140" cy="140" r="14"/>
+                <circle class="gauge-needle-hub-center" cx="140" cy="140" r="6"/>
+              </g>
+            </svg>
+
+            <!-- Digital Value & Purity Readout (0 - 100 Scale) -->
+            <div class="digital-readout">
+              <div id="speedometer-mph-value" class="digital-mph-val">0</div>
+              <div class="digital-mph-unit">BOOST INDEX // SCALE 0–100</div>
+              <div class="digital-purity-tag">PURITY SCORE</div>
+            </div>
+          </div>
+
+          <!-- RPM Tachometer Bar -->
+          <div class="rpm-container">
+            <div class="rpm-header">
+              <span>ENGINE RPM</span>
+              <span id="rpm-text-val">0 / 8,000</span>
+            </div>
+            <div class="rpm-bar-track">
+              <div id="rpm-bar-fill" class="rpm-bar-fill" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <!-- Zone Indicator -->
+          <div id="speedometer-zone-label" class="zone-label zone-standby">
+            STANDBY // AWAITING DATASET
+          </div>
+
+          <!-- Nitro Boost Button (Max 100) -->
+          <button id="nitro-booster-btn" class="nitro-booster-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>NITRO BOOSTER // 100% REPAIR</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- LAYER 1: OPTIONS CARDS -->
+      <section class="options-section">
+        <div class="section-header-row">
+          <div>
+            <h2 class="section-headline">Command Core // Options Matrix</h2>
+            <p class="section-subtext">Select an interface card to submit records, inspect telemetry, or trigger category self-healing.</p>
+          </div>
+        </div>
+
+        <div class="options-grid">
+          <!-- Option Card 1: Enter Your Data (Available for Student & Admin) -->
+          <div class="option-card" id="card-enter-data">
+            <div>
+              <div class="card-top">
+                <div class="card-icon-bubble">📝</div>
+                <span class="card-layer-tag">INTAKE PORTAL</span>
+              </div>
+              <h3 class="card-title">Enter Your Data</h3>
+              <p class="card-desc">
+                Submit or update your personal record (Name, Age, Phone, Semester, Department, Section) with live AI validation.
+              </p>
+            </div>
+            <div class="card-action-bar">
+              <span>Open Intake Portal</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Option Card 2: Continuous Data Quality Percent Checks -->
+          <div class="option-card" id="card-quality-checks">
+            <div>
+              <div class="card-top">
+                <div class="card-icon-bubble">📊</div>
+                <span class="card-layer-tag">TELEMETRY</span>
+              </div>
+              <h3 class="card-title">Data Quality Checks</h3>
+              <p class="card-desc">
+                Monitor continuous purity percentages, column-by-column completeness, and anomaly distributions.
+              </p>
+            </div>
+            <div class="card-action-bar">
+              <span>View Quality Breakdown</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Option Card 3: Recheck & Correct Category Mistakes -->
+          <div class="option-card" id="card-recheck-category">
+            <div>
+              <div class="card-top">
+                <div class="card-icon-bubble">🔧</div>
+                <span class="card-layer-tag">SELF-HEALING</span>
+              </div>
+              <h3 class="card-title">Recheck & Correct Category</h3>
+              <p class="card-desc">
+                Filter by specific department, section, or database category and run targeted non-destructive repair.
+              </p>
+            </div>
+            <div class="card-action-bar">
+              <span>Target Category Repair</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Option Card 4: History of All Changes in Category -->
+          <div class="option-card" id="card-history-changes">
+            <div>
+              <div class="card-top">
+                <div class="card-icon-bubble">📜</div>
+                <span class="card-layer-tag">AUDIT TRAIL</span>
+              </div>
+              <h3 class="card-title">History of Changes</h3>
+              <p class="card-desc">
+                Inspect before-and-after change diffs, modification timestamps, and self-healing rationale for any category.
+              </p>
+            </div>
+            <div class="card-action-bar">
+              <span>Inspect Audit Logs</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Option Card 5: Download Specific Category Records -->
+          <div class="option-card" id="card-download-category">
+            <div>
+              <div class="card-top">
+                <div class="card-icon-bubble">📥</div>
+                <span class="card-layer-tag">EXPORT</span>
+              </div>
+              <h3 class="card-title">Download Category Records</h3>
+              <p class="card-desc">
+                Export pristine, cleaned records filtered by department or section in CSV, Excel (XLSX), or JSON.
+              </p>
+            </div>
+            <div class="card-action-bar">
+              <span>Configure Export</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+
+          <!-- Option Card 6: Autonomous Bulk Upload Engine (ADMIN ONLY) -->
+          <div class="option-card" id="card-bulk-engine" style="display: none;">
+            <div>
+              <div class="card-top">
+                <div class="card-icon-bubble">🚀</div>
+                <span class="card-layer-tag" style="color: #c77dff; border-color: rgba(157, 78, 221, 0.4);">ADMIN ONLY</span>
+              </div>
+              <h3 class="card-title">Autonomous Bulk Engine</h3>
+              <p class="card-desc">
+                Upload massive institutional CSV or Excel datasets. Run the full autonomous 6-step repair and validation pipeline.
+              </p>
+            </div>
+            <div class="card-action-bar">
+              <span>Manage Bulk Datasets</span>
+              <span class="card-arrow">→</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bulk File Upload Zone (ADMIN ONLY: Hidden for Student) -->
+      <section class="upload-dropzone-wrapper" id="bulk-upload-zone" style="display: none;">
+        <div class="dropzone-icon">📁</div>
+        <h3 class="dropzone-title">Upload Institutional Dataset (Admin Only)</h3>
+        <p class="dropzone-subtitle">Drag & drop your huge Excel (.xlsx, .xls) or CSV files (up to 10MB) for whole-database repair.</p>
+        
+        <input type="file" id="file-input-elem" accept=".csv, .xlsx, .xls" style="display: none;">
+        
+        <div class="dropzone-btn-group">
+          <button id="browse-files-btn" class="btn-cyber-primary">
+            📁 Browse Excel / CSV File...
+          </button>
+          <button id="clear-database-btn" class="btn-cyber-secondary">
+            🗑️ Clear / Reset Database
+          </button>
+        </div>
+      </section>
+
+    </div><!-- end #main-dashboard -->
+
+  </div><!-- end app-wrapper -->
+
+  <!-- ==================== LAYER 2 MODALS ==================== -->
+
+  <!-- 1. "Enter Your Data" Layer-2 Intake Modal -->
+  <div class="modal-overlay" id="modal-enter-data">
+    <div class="modal-card">
+      <button class="modal-close-btn" data-close="modal-enter-data">&times;</button>
+      <h3 class="modal-title">📝 Enter Your Data // Intake Portal</h3>
+      <p class="modal-subtitle">Submit or update your student/candidate record in the active database.</p>
+
+      <form id="intake-form">
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input type="text" id="intake-name" class="form-input" placeholder="e.g. Rahul Sharma" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Age *</label>
+            <input type="number" id="intake-age" class="form-input" placeholder="17–24" min="16" max="24" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Phone Number *</label>
+            <input type="tel" id="intake-phone" class="form-input" placeholder="10-digit mobile number" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Email Address (Optional)</label>
+            <input type="email" id="intake-email" class="form-input" placeholder="e.g. user@college.edu">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Department / Branch *</label>
+            <select id="intake-dept" class="form-select" required>
+              <option value="Computer Science">Computer Science</option>
+              <option value="Electronics & Communication">Electronics & Communication</option>
+              <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+              <option value="Mechanical Engineering">Mechanical Engineering</option>
+              <option value="Civil Engineering">Civil Engineering</option>
+              <option value="Information Technology">Information Technology</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Semester *</label>
+            <select id="intake-sem" class="form-select" required>
+              <option value="1">Semester 1</option>
+              <option value="2">Semester 2</option>
+              <option value="3">Semester 3</option>
+              <option value="4" selected>Semester 4</option>
+              <option value="5">Semester 5</option>
+              <option value="6">Semester 6</option>
+              <option value="7">Semester 7</option>
+              <option value="8">Semester 8</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Year of Study</label>
+            <select id="intake-year" class="form-select">
+              <option value="1">Year 1</option>
+              <option value="2" selected>Year 2</option>
+              <option value="3">Year 3</option>
+              <option value="4">Year 4</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Section *</label>
+            <select id="intake-section" class="form-select" required>
+              <option value="A">Section A</option>
+              <option value="B">Section B</option>
+              <option value="C">Section C</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn-cyber-secondary" data-close="modal-enter-data">Cancel</button>
+          <button type="submit" class="btn-cyber-primary">Submit & Self-Clean</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. "Quality Checks" Layer-2 Modal -->
+  <div class="modal-overlay" id="modal-quality-checks">
+    <div class="modal-card wide">
+      <button class="modal-close-btn" data-close="modal-quality-checks">&times;</button>
+      <h3 class="modal-title">📊 Continuous Data Quality Checks</h3>
+      <p class="modal-subtitle">Granular health metrics, column completeness scores, and detected anomaly classifications.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+        <div class="metric-box">
+          <span class="metric-box-label">Missing Values</span>
+          <span id="qc-missing-count" class="metric-box-val amber">0</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-box-label">Duplicates</span>
+          <span id="qc-dup-count" class="metric-box-val pink">0</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-box-label">Format Errors</span>
+          <span id="qc-format-count" class="metric-box-val cyan">0</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-box-label">Outliers</span>
+          <span id="qc-outlier-count" class="metric-box-val green">0</span>
+        </div>
+      </div>
+
+      <h4 style="font-family: 'Syne', sans-serif; font-size: 1rem; color: #00f3ff; margin-top: 16px;">Column Completeness Audit</h4>
+      <div class="table-responsive">
+        <table class="cyber-table" id="qc-columns-table">
+          <thead>
+            <tr>
+              <th>Column Name</th>
+              <th>Detected Type</th>
+              <th>Anomalies</th>
+              <th>Completeness</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 12px;">
+        <button id="qc-view-ai-insights-btn" class="btn-cyber-secondary">💡 View AI Root Causes</button>
+        <button class="btn-cyber-primary" data-close="modal-quality-checks">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. "Recheck & Correct Category" Layer-2 Modal -->
+  <div class="modal-overlay" id="modal-recheck-category">
+    <div class="modal-card wide">
+      <button class="modal-close-btn" data-close="modal-recheck-category">&times;</button>
+      <h3 class="modal-title">🔧 Recheck & Correct Specific Category</h3>
+      <p class="modal-subtitle">Filter by department or section to isolate mistakes and trigger targeted self-healing repair.</p>
+
+      <div class="form-grid" style="margin-bottom: 18px;">
+        <div class="form-group">
+          <label class="form-label">Select Department / Category</label>
+          <select id="recheck-dept-select" class="form-select">
+            <option value="all">All Departments</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Select Section</label>
+          <select id="recheck-section-select" class="form-select">
+            <option value="all">All Sections</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="category-records-summary" style="margin-bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #00f5a0;">
+        Showing records for: All Departments
+      </div>
+
+      <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+        <table class="cyber-table" id="category-preview-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Reg No</th>
+              <th>Age</th>
+              <th>Phone</th>
+              <th>Dept</th>
+              <th>Sec</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div id="category-repair-feedback" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #ffb703;"></div>
+        <div style="display: flex; gap: 12px;">
+          <button class="btn-cyber-secondary" data-close="modal-recheck-category">Close</button>
+          <button id="category-execute-repair-btn" class="btn-cyber-primary">⚡ Clean & Repair This Category</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. "History of Changes" Layer-2 Modal -->
+  <div class="modal-overlay" id="modal-history-changes">
+    <div class="modal-card wide">
+      <button class="modal-close-btn" data-close="modal-history-changes">&times;</button>
+      <h3 class="modal-title">📜 Modification History & Audit Trail</h3>
+      <p class="modal-subtitle">Complete chronological record of all ingestions, corrections, duplicate purges, and formatting rectifications.</p>
+
+      <div class="form-grid" style="margin-bottom: 16px;">
+        <div class="form-group">
+          <label class="form-label">Filter Category</label>
+          <select id="history-category-filter" class="form-select">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Search Changes</label>
+          <input type="text" id="history-search-input" class="form-input" placeholder="Search by field, name, or action...">
+        </div>
+      </div>
+
+      <div class="table-responsive" style="max-height: 320px; overflow-y: auto;">
+        <table class="cyber-table" id="history-audit-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Field / Target</th>
+              <th>Previous Value</th>
+              <th>Repaired Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+        <span id="history-total-count" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-muted);">
+          Total Changes Recorded: 0
+        </span>
+        <button class="btn-cyber-primary" data-close="modal-history-changes">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. "Download Specific Category Records" Layer-2 Modal -->
+  <div class="modal-overlay" id="modal-download-category">
+    <div class="modal-card">
+      <button class="modal-close-btn" data-close="modal-download-category">&times;</button>
+      <h3 class="modal-title">📥 Download Specific Category Records</h3>
+      <p class="modal-subtitle">Select your target category and export format for verified clean dataset extraction.</p>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Department / Category</label>
+          <select id="download-dept-select" class="form-select">
+            <option value="all">Entire Database (All Departments)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <select id="download-section-select" class="form-select">
+            <option value="all">All Sections</option>
+          </select>
+        </div>
+
+        <div class="form-group full-width">
+          <label class="form-label">Export Format</label>
+          <select id="download-format-select" class="form-select">
+            <option value="csv" selected>CSV (Comma Separated Values)</option>
+            <option value="xlsx">Excel Spreadsheet (.XLSX)</option>
+            <option value="json">JSON (Structured Document)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+        <button class="btn-cyber-secondary" data-close="modal-download-category">Cancel</button>
+        <button id="download-confirm-btn" class="btn-cyber-primary">📥 Download Cleaned Dataset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. AI Diagnostic & Root Causes Modal -->
+  <div class="modal-overlay" id="modal-ai-insights">
+    <div class="modal-card">
+      <button class="modal-close-btn" data-close="modal-ai-insights">&times;</button>
+      <h3 class="modal-title">💡 Autonomous AI Root-Cause Diagnosis</h3>
+      <p class="modal-subtitle">Autonomous reasoning explaining why anomalies occurred and assessing downstream pipeline risk.</p>
+
+      <div id="ai-risk-banner" style="background: rgba(255, 0, 84, 0.12); border: 1px solid rgba(255, 0, 84, 0.4); padding: 14px; border-radius: 10px; margin-bottom: 16px; font-size: 0.9rem; color: #ff0054;">
+        Loading risk assessment...
+      </div>
+
+      <h4 style="font-family: 'Syne', sans-serif; font-size: 0.95rem; color: #00f3ff; margin-bottom: 8px;">Identified Root Causes</h4>
+      <ul id="ai-root-causes-list" style="padding-left: 20px; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+        <!-- List items populated dynamically -->
+      </ul>
+
+      <h4 style="font-family: 'Syne', sans-serif; font-size: 0.95rem; color: #00f5a0; margin-bottom: 8px;">Recommended Autonomous Priority</h4>
+      <ol id="ai-priority-list" style="padding-left: 20px; font-size: 0.9rem; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+        <!-- Priority items populated dynamically -->
+      </ol>
+
+      <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+        <button class="btn-cyber-primary" data-close="modal-ai-insights">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Interactive Before-and-After Diff Inspector Modal -->
+  <div class="modal-overlay" id="modal-diff-inspector">
+    <div class="modal-card wide">
+      <button class="modal-close-btn" data-close="modal-diff-inspector">&times;</button>
+      <h3 class="modal-title">🔍 Before vs. After Diff Inspector</h3>
+      <p class="modal-subtitle">Inspect cell-level changes made by the Autonomous Repair Engine. Green cells denote repairs, orange cells denote imputations, and red denotes pruned duplicate rows.</p>
+
+      <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+        <table class="cyber-table" id="diff-inspector-table">
+          <thead>
+            <tr>
+              <th>Row Index</th>
+              <th>Attribute / Field</th>
+              <th>Original Dirty Value</th>
+              <th>Repaired Clean Value</th>
+              <th>Status Tag</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+        <button id="diff-view-cert-btn" class="btn-cyber-secondary">🏆 View Quality Certificate</button>
+        <button class="btn-cyber-primary" data-close="modal-diff-inspector">Close Diff</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Quality Audit Certificate Modal -->
+  <div class="modal-overlay" id="modal-certificate">
+    <div class="modal-card">
+      <button class="modal-close-btn" data-close="modal-certificate">&times;</button>
+      <div class="certificate-frame">
+        <div class="cert-seal">🛡️</div>
+        <div class="cert-title">DATAFIX CERTIFIED CLEAN</div>
+        <div class="cert-badge">AUDIT PASSED // 100% PURITY</div>
+
+        <p style="margin-top: 18px; font-size: 0.95rem; color: #cbd5e1; line-height: 1.6;">
+          This certifies that the target dataset has been rigorously audited and sanitized by the <strong>DataFix Autonomous Engine</strong>.
+          All missing values, duplicate entries, formatting irregularities, and statistical outliers have been safely corrected.
+        </p>
+
+        <div style="margin-top: 20px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #64748b; display: flex; justify-content: space-around;">
+          <div>SESSION: <span id="cert-session-id" style="color: #00f3ff;">#SESS-8A91</span></div>
+          <div>TIMESTAMP: <span id="cert-timestamp" style="color: #00f5a0;">2026-11-20</span></div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: center; gap: 14px;">
+          <button id="cert-print-btn" class="btn-cyber-secondary">🖨️ Print Certificate</button>
+          <button class="btn-cyber-primary" data-close="modal-certificate">Accept Certification</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Hub -->
+  <div id="toast-container"></div>
+
+  <!-- Vendor Libraries (Three.js & SheetJS) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Application Modules -->
+  <script src="js/collegeData.js"></script>
+  <script src="js/speedometer.js"></script>
+  <script src="js/threeScene.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
